@@ -40,6 +40,9 @@ lt6911uxc_a@2b {
 /*------------------------------------------------------------------------------
 * Example 2 (Integration Nvidia Jetson Xavier AGX)
 *-----------------------------------------------------------------------------*/
+
+#define LT6911_EN "okay"
+
 / {
 	i2c@3180000 {
 		clock-frequency = <100000>;
@@ -111,6 +114,14 @@ lt6911uxc_a@2b {
 							remote-endpoint = <&hdmi2csi_lt6911_out0>;
 						};
 					};
+					port@1 {
+                        status = LT6911_EN;
+                        reg = <1>;
+                        hdmi2csi_csi_out0: endpoint@1 {
+                            status = LT6911_EN;
+                            remote-endpoint = <&hdmi2csi_vi_in0>;
+                        };
+                    };
 				};
 			};
 		};
