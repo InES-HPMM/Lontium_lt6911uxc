@@ -1,7 +1,7 @@
 Device tree examples for the Lontium HDMI to CSI converter lt6911uxc. One
 example shows the basic chip configuration and in the second example we
 provide our configuration to integrate this custom chip into the device tree
-of the Nvidia Jetson Xavier AGX.
+of the Nvidia Jetson Orin NX
 
 /*------------------------------------------------------------------------------
 * ------------------------------------------------------------------------------
@@ -15,181 +15,341 @@ of the Nvidia Jetson Xavier AGX.
 * Example 1 (Chip)
 *-----------------------------------------------------------------------------*/
 
-lt6911uxc_a@2b {
-    compatible = "lontium,lt6911uxc";
-    reg = <0x2b>;
-    status = "okay";
-    devnode = "video0";
-    /* Reset */
-    reset-gpio = <&tegra_main_gpio TEGRA194_MAIN_GPIO(H, 3) GPIO_ACTIVE_LOW>;
-    /* Interrupt */
-    interrupt-parent = <&tegra_main_gpio>;
-    interrupts = <TEGRA194_MAIN_GPIO(P, 0) IRQ_TYPE_LEVEL_HIGH>;
-    port@0 {
-        ret = <0>;
-        status = "okay";
-        hdmi2csi_lt6911_out0: endpoint {
-            status = "okay";
-            port-index = <0>;
-            bus-width = <4>;
-            remote-endpoint = <&hdmi2csi_csi_in0>;
-        };
-    };
+lt6911uxc_zhaw_a@2b {
+	compatible = "lontium,lt6911uxc_zhaw";
+	reg = <0x2b>;
+	status = LT6911_EN;
+	devnode = "video0";
+	sensor_model="lt6911";
+	
+	/* Interrupt */
+	interrupt-parent = <&gpio_aon>;
+	interrupts = <TEGRA234_AON_GPIO(CC, 0) IRQ_TYPE_LEVEL_HIGH>;
+
+
+
+	/* Physical dimensions of sensor */
+	physical_w = "3.674";
+	physical_h = "2.738";
+
+
+	refclk_hz = <27000000>;
+
+	mode0 { // 1920 x 1080, 60 FPS
+		num_lanes = "4";
+		tegra_sinterface = "serial_a";
+		phy_mode = "DPHY";
+		discontinuous_clk = "yes";
+		dpcm_enable = "false";
+		cil_settletime = "0";
+		lane_polarity = "6";		
+		
+		active_w = "1920";
+		active_h = "1080";
+		mode_type = "yuv";
+		pixel_phase = "uyvy";
+		csi_pixel_bit_depth = "16";
+		readout_orientation = "0";
+		line_length = "1920";
+		pix_clk_hz = "220000000";
+		default_framerate = "60000000"; /* 60.0 fps */
+	};
+
+	mode1 { // 3840 x 2160, 30 FPS
+		num_lanes = "4";
+		tegra_sinterface = "serial_a";
+		phy_mode = "DPHY";
+		discontinuous_clk = "yes";
+		dpcm_enable = "false";
+		cil_settletime = "0";
+		lane_polarity = "6";		
+		
+		active_w = "3840";
+		active_h = "2160";
+		mode_type = "yuv";
+		pixel_phase = "uyvy";
+		csi_pixel_bit_depth = "16";
+		readout_orientation = "0";
+		line_length = "3840";
+		pix_clk_hz = "297000000";
+		default_framerate = "30000000"; /* 30.0 fps */
+	};
+
+	mode2 { // 1920 x 2160, 60 FPS
+		num_lanes = "4";
+		tegra_sinterface = "serial_a";
+		phy_mode = "DPHY";
+		discontinuous_clk = "yes";
+		dpcm_enable = "false";
+		cil_settletime = "0";
+		lane_polarity = "6";		
+		
+		active_w = "1920";
+		active_h = "2160";
+		mode_type = "yuv";
+		pixel_phase = "uyvy";
+		csi_pixel_bit_depth = "16";
+		readout_orientation = "0";
+		line_length = "1920";
+		pix_clk_hz = "297000000";
+		default_framerate = "60000000"; /* 60.0 fps */
+	};
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		port@0 {
+			reg = <0>;
+			status = LT6911_EN;
+			hdmi2csi_lt6911_out0: endpoint {
+				status = LT6911_EN;
+				port-index = <0>;
+				bus-width = <4>;
+				remote-endpoint = <&hdmi2csi_csi_in0>;
+			};
+		};
+	};
 };
 
 /*------------------------------------------------------------------------------
-* Example 2 (Integration Nvidia Jetson Xavier AGX)
+* Example 2 (Integration Nvidia Jetson Orin NX)
 *-----------------------------------------------------------------------------*/
+
+/dts-v1/;
+/plugin/;
 
 #define LT6911_EN "okay"
 
 / {
-	i2c@3180000 {
-		clock-frequency = <100000>;
 
-		lt6911uxc_a@2b {
-			compatible = "lontium,lt6911uxc";
-			reg = <0x2b>;
-			status = "okay";
-			devnode = "video0";
-			/* Reset */
-			reset-gpio = <&tegra_main_gpio TEGRA194_MAIN_GPIO(H, 3) GPIO_ACTIVE_LOW>;
-			/* Interrupt */
-			interrupt-parent = <&tegra_main_gpio>;
-			interrupts = <TEGRA194_MAIN_GPIO(P, 0) IRQ_TYPE_LEVEL_HIGH>;
-			port@0 {
-				ret = <0>;
-				status = "okay";
-				hdmi2csi_lt6911_out0: endpoint {
-					status = "okay";
-					port-index = <0>;
-					bus-width = <4>;
-					remote-endpoint = <&hdmi2csi_csi_in0>;
-				};
-			};
-		};
-	};
 
-	host1x {
-		/* Delete existing VI node to avoid conflicts */
-        /delete-node/ vi;
-		vi@15c10000 {
-			num-channels = <1>;
-			status = LT6911_EN;
-			ports {
-				#address-cells = <1>;
-				#size-cells = <0>;
-				port@0 {
+    fragment@1 {
+        target-path="/bus@0";
+        __overlay__{
+
+            i2c@3160000 {
+                clock-frequency = <100000>;
+				
+				lt6911uxc_zhaw_a@2b {
+					compatible = "lontium,lt6911uxc_zhaw";
+					reg = <0x2b>;
 					status = LT6911_EN;
-					reg = <0>;
-					hdmi2csi_vi_in0: endpoint {
-						status = LT6911_EN;
-						port-index =<0>;
-						bus-width = <4>;
-						remote-endpoint = <&hdmi2csi_csi_out0>;
-					};
-				};
-			};
-		};
+					devnode = "video0";
+					sensor_model="lt6911";
+					
+					/* Interrupt */
+					interrupt-parent = <&gpio_aon>;
+					interrupts = <TEGRA234_AON_GPIO(CC, 0) IRQ_TYPE_LEVEL_HIGH>;
 
-		nvcsi@15a00000 {
-			num-channels = <1>;
-			#address-cells = <1>;
-			#size-cells = <0>;
-			status = LT6911_EN;
-			channel@0 {
-				status = LT6911_EN;
-				reg = <0>;
-				discontinuous_clk = "no";
-				ports {
-					#address-cells = <1>;
-					#size-cells = <0>;
-					port@0 {
-						status = LT6911_EN;
-						reg = <0>;
-						hdmi2csi_csi_in0: endpoint@0 {
+
+
+					/* Physical dimensions of sensor */
+					physical_w = "3.674";
+					physical_h = "2.738";
+
+
+					refclk_hz = <27000000>;
+
+					mode0 { // 1920 x 1080, 60 FPS
+						num_lanes = "4";
+						tegra_sinterface = "serial_a";
+						phy_mode = "DPHY";
+						discontinuous_clk = "yes";
+						dpcm_enable = "false";
+						cil_settletime = "0";
+						lane_polarity = "6";		
+						
+						active_w = "1920";
+						active_h = "1080";
+						mode_type = "yuv";
+						pixel_phase = "uyvy";
+						csi_pixel_bit_depth = "16";
+						readout_orientation = "0";
+						line_length = "1920";
+						pix_clk_hz = "220000000";
+						default_framerate = "60000000"; /* 60.0 fps */
+					};
+
+
+					/* Physical dimensions of sensor */
+					p
+
+					/* Physical dimensions of sensor */
+					physical_w = "3.674";	discontinuous_clk = "yes";
+						dpcm_enable = "false";
+						cil_settletime = "0";
+						lane_polarity = "6";		
+						
+						active_w = "3840";
+						active_h = "2160";
+						mode_type = "yuv";
+						pixel_phase = "uyvy";
+						csi_pixel_bit_depth = "16";
+						readout_orientation = "0";
+						line_length = "3840";
+						pix_clk_hz = "297000000";
+						default_framerate = "30000000"; /* 30.0 fps */
+					};
+
+					mode2 { // 1920 x 2160, 60 FPS
+						num_lanes = "4";
+						tegra_sinterface = "serial_a";
+						phy_mode = "DPHY";
+						discontinuous_clk = "yes";
+						dpcm_enable = "false";
+						cil_settletime = "0";
+						lane_polarity = "6";		
+						
+						active_w = "1920";
+						active_h = "2160";
+						mode_type = "yuv";
+						pixel_phase = "uyvy";
+						csi_pixel_bit_depth = "16";
+						readout_orientation = "0";
+						line_length = "1920";
+						pix_clk_hz = "297000000";
+						default_framerate = "60000000"; /* 60.0 fps */
+					};
+
+					ports {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						port@0 {
+							reg = <0>;
 							status = LT6911_EN;
-							port-index = <0>;
-							bus-width = <4>;
-							remote-endpoint = <&hdmi2csi_lt6911_out0>;
+							hdmi2csi_lt6911_out0: endpoint {
+								status = LT6911_EN;
+								port-index = <0>;
+								bus-width = <4>;
+								remote-endpoint = <&hdmi2csi_csi_in0>;
+							};
 						};
 					};
-					port@1 {
+				};
+            };
+    
+    
+            host1x@13e00000 {
+                nvcsi@15a00000 {
+                    num-channels = <1>;
+                    #address-cells = <1>;
+                    #size-cells = <0>;
+                    status = LT6911_EN;
+                    channel@0 {
                         status = LT6911_EN;
-                        reg = <1>;
-                        hdmi2csi_csi_out0: endpoint@1 {
-                            status = LT6911_EN;
-                            remote-endpoint = <&hdmi2csi_vi_in0>;
+                        reg = <0>;
+                        discontinuous_clk = "no";
+                        ports {
+                            #address-cells = <1>;
+                            #size-cells = <0>;
+                            port@0 {
+                                status = LT6911_EN;
+                                reg = <0>;
+                                hdmi2csi_csi_in0: endpoint@0 {
+                                    status = LT6911_EN;
+                                    port-index = <0>;
+                                    bus-width = <4>;
+                                    remote-endpoint = <&hdmi2csi_lt6911_out0>;
+                                };
+                            };
+                            port@1 {
+                                status = LT6911_EN;
+                                reg = <1>;
+                                hdmi2csi_csi_out0: endpoint@1 {
+                                    status = LT6911_EN;
+                                    remote-endpoint = <&hdmi2csi_vi_in0>;
+                                };
+                            };
                         };
                     };
-				};
-			};
-		};
-	};
+                };
+            };
+        };
+    };
 
-	tegra-camera-platform {
-		compatible = "nvidia, tegra-camera-platform";
-		/**
-		* Physical settings to calculate max ISO BW
-		*
-		* num_csi_lanes = <>;
-		* Total number of CSI lanes when all cameras are active
-		*
-		* max_lane_speed = <>;
-		* Max lane speed in Kbit/s
-		*
-		* min_bits_per_pixel = <>;
-		* Min bits per pixel
-		*
-		* vi_peak_byte_per_pixel = <>;
-		* Max byte per pixel for the VI ISO case
-		*
-		* vi_bw_margin_pct = <>;
-		* Vi bandwidth margin in percentage
-		*
-		* max_pixel_rate = <>;
-		* Max pixel rate in Kpixel/s for the ISP ISO case
-		*
-		* isp_peak_byte_per_pixel = <>;
-		* Max byte per pixel for the ISP ISO case
-		*
-		* isp_bw_margin_pct = <>;
-		* Isp bandwidth margin in percentage
-		*/
-		num_csi_lanes = <8>;
-		max_lane_speed = <2500000>;
-		min_bits_per_pixel = <16>;
-		vi_peak_byte_per_pixel = <3>;
-		vi_bw_margin_pct = <25>;
-		isp_peak_byte_per_pixel = <3>;
-		isp_bw_margin_pct = <25>;
-		status = LT6911_EN;
-
-		/**
-		* The general guideline for naming badge_info contains 3 parts, and is as follows,
-		* The first part is the camera_board_id for the module; if the module is in a FFD
-		* platform, then use the platform name for this part.
-		* The second part contains the position of the module, ex. “rear” or “front”.
-		* The third part contains the last 6 characters of a part number which is found
-		* in the module's specsheet from the vender.
-		*/
-		modules {
-			module0 {
-				status = LT6911_EN;
-				badge = "hdmi2csi_left_6911";
-				position = "left";
-				orientation = "1";
-				drivernode0 {
-					/* Declare PCL support driver (classically known as guid)  */
-					pcl_id = "v4l2_sensor";
-					/* Driver v4l2 device name */
-					devname = "lt6911uxc 2-002b";
-					/* Declare the device-tree hierarchy to driver instance */
-					proc-device-tree = "/proc/device-tree/i2c@3180000/lt6911uxc_a@2b";
-				};
-			};
-		};
-	};
+    fragment@2 {
+        target-path="/";
+        __overlay__{
+            tegra-capture-vi {
+                num-channels = <1>;
+                status = LT6911_EN;
+                ports {
+                    #address-cells = <1>;
+                    #size-cells = <0>;
+                    port@0 {
+                        status = LT6911_EN;
+                        reg = <0>;
+                        hdmi2csi_vi_in0: endpoint {
+                            status = LT6911_EN;
+                            port-index =<0>;
+                            bus-width = <4>;
+                            remote-endpoint = <&hdmi2csi_csi_out0>;
+                        };
+                    };
+                };
+            };
+        
+        
+        
+        
+            tegra-camera-platform {
+                compatible = "nvidia, tegra-camera-platform";
+                /**
+                * Physical settings to calculate max ISO BW
+                *
+                * num_csi_lanes = <>;
+                * Total number of CSI lanes when all cameras are active
+                *
+                * max_lane_speed = <>;
+                * Max lane speed in Kbit/s
+                *
+                * min_bits_per_pixel = <>;
+                * Min bits per pixel
+                *
+                * vi_peak_byte_per_pixel = <>;
+                * Max byte per pixel for the VI ISO case
+                *
+                * vi_bw_margin_pct = <>;
+                * Vi bandwidth margin in percentage
+                *
+                * max_pixel_rate = <>;
+                * Max pixel rate in Kpixel/s for the ISP ISO case
+                *
+                * isp_peak_byte_per_pixel = <>;
+                * Max byte per pixel for the ISP ISO case
+                *
+                * isp_bw_margin_pct = <>;
+                * Isp bandwidth margin in percentage
+                */
+                num_csi_lanes = <4>;
+                max_lane_speed = <2500000>;
+                min_bits_per_pixel = <16>;
+                vi_peak_byte_per_pixel = <3>;
+                vi_bw_margin_pct = <25>;
+                isp_peak_byte_per_pixel = <3>;
+                isp_bw_margin_pct = <25>;
+                status = LT6911_EN;
+        
+                modules {
+                    module0 {
+                        status = LT6911_EN;
+                        badge = "hdmi2csi_left_6911";
+                        position = "left";
+                        orientation = "1";
+                        drivernode0 {
+                            /* Declare PCL support driver (classically known as guid)  */
+                            pcl_id = "v4l2_sensor";
+                            /* Driver v4l2 device name */
+                            devname = "lt6911uxc_zhaw 9-002b";
+                            /* Declare the device-tree hierarchy to driver instance */
+                            // proc-device-tree = "/proc/device-tree/i2c@3160000/pca9543@70/i2c@0/lt6911uxc_zhaw_a@2b";
+                            sysfs-device-tree = "/sys/firmware/devicetree/base/bus@0/i2c@3160000/pca9543@70/i2c@0/lt6911uxc_zhaw_a@2b";
+                        };
+                    };
+                };
+            };
+        };
+    };
 };
 	
 
