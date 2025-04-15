@@ -6,7 +6,7 @@ This repository contains a driver for the lt6911uxc HDMI2.0 to MIPI CSI converte
 
 [![logo](https://github.com/InES-HPMM/FPD-LinkIII_Raspberry_HW/blob/master/images/ines_logo.png)](https://www.zhaw.ch/en/engineering/institutes-centres/ines/ "Homepage")
 
-__The group High Performance Multimedia from the Institute of Embedded Systems associated with ZHAW School of Engineering proudly presents the new version of the open source driver for lontium device LT6911UXC.__
+__The group High Performance Multimedia from the Institute of Embedded Systems associated with ZHAW School of Engineering proudly presents the new version for L4T 36.X of the open source driver for lontium device LT6911UXC.__
 
 > For recent news check out our [Blog](https://blog.zhaw.ch/high-performance/).
 
@@ -34,16 +34,17 @@ For geneneral information and instructions regarding the NVIDIA L4T release or h
     ```
     obj-m += lt6911uxc_zhaw.o
     ```
- 4) Rebuild your kernel according to NVIDIA's developer Guide mentioned above. With correct hardware description in the device-tree, the driver should automatically load on boot-up and should add a video device accordingly.
+ 4) Rebuild your kernel according to NVIDIA's developer Guide mentioned above.
 
-After those steps, the driver module can be enabled in the menuconfig and the custom kernel including this driver compiled.
+
+With correct hardware description in the device-tree, the driver should automatically load on boot-up and should add a video device accordingly.
 
 ## Information about the usage with LT6911
-Even though this kernel driver implements lt6911uxc to be used within your Jetson Linux environment, there are a couple important points to mention at this point.
-1. In Addition to implement this driver, the lt6911uxc IC has to be flashed with a working firmware by provided by Lontium directly.
-2. Upon HDMI device connection or format change, the Lontium emits an interrupt over the specified interrupt line. Make sure that this interrupt is routed to a Jetson GPIO and configured accordingly in the device-tree. To apply formats detected by the lt6911uxc, you need to apply the timings to the VI using v4l2-ctl:
+Even though this kernel driver implements lt6911uxc to be used within your Jetson Linux environment, there are a couple important points to mention:
+1. In Addition to implementing this driver, the lt6911uxc IC has to be flashed with a working firmware provided by Lontium directly.
+2. Upon HDMI device connection or format change, the Lontium emits an interrupt over the specified interrupt line. Make sure that this interrupt is routed to a Jetson GPIO and configured accordingly in the device tree. To apply formats detected by the lt6911uxc, you need to apply the timings to the VI using v4l2-ctl:
    ```bash
    v4l2-ctl --device=<video-device> --query-dv-timings
    v4l2-ctl --device=/dev/video0 --set-dv-bt-timings query
    ```
-3. With a suiting firmware running on the IC, is capable streaming 4k60 HDMI input sources via 8-lane CSI. For this specific use case, feel free to [contact us](mailto:blog.zhaw.ch).
+3. With a suiting firmware running on the IC it is capable streaming 4k60 HDMI input sources via 8-lane CSI. For this specific use case, feel free to [contact us](mailto:blog.zhaw.ch).
