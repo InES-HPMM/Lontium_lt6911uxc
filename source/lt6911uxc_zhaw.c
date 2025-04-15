@@ -61,18 +61,6 @@ MODULE_PARM_DESC(debug, "debug level (0-3)");
 #define LT6911UXC_DEFAULT_MODE	0
 #define LT6911UXC_DEFAULT_DATAFMT	MEDIA_BUS_FMT_UYVY8_1X16
 
-
-/*register callback for dummy driver for second port*/
-static void (*timings_callback)(struct v4l2_dv_timings timings);
-/* Prototype for the callback registration function */
-void lt6911uxc_register_timings_callback(void (*cb)(struct v4l2_dv_timings));
-
-
-void lt6911uxc_register_timings_callback(void (*cb)(struct v4l2_dv_timings)) {
-    timings_callback = cb;
-}
-EXPORT_SYMBOL(lt6911uxc_register_timings_callback);
-
 /* v4l2 dv timings */
 static struct v4l2_dv_timings default_timing = V4L2_DV_BT_CEA_1920X1080P60;
 
@@ -502,10 +490,6 @@ static void lt6911uxc_hdmi_int_handler(struct lt6911uxc *state,
 			memset(&state->timings, 0, sizeof(state->timings));
 			memset(&state->detected_timings, 0,
 			       sizeof(state->detected_timings));
-			// Call callback funtion with new timings
-			if (timings_callback) {
-				timings_callback(timings);
-			}
 		}
 		if (handled)
 			*handled = true;
@@ -549,11 +533,6 @@ static void lt6911uxc_hdmi_int_handler(struct lt6911uxc *state,
 		} else {
 			state->detected_timings = timings;
 			dev_dbg(dev,"detected timings updated");
-		}
-
-		// Call callback funtion with new timings
-		if (timings_callback) {
-			timings_callback(timings);
 		}
 
 
